@@ -1,11 +1,15 @@
 import { FilterBar } from "./components/FilterBar";
+import { Sidebar } from "./components/Sidebar";
+import { ThemeToggle } from "./components/ThemeToggle";
 import { TodoForm } from "./components/TodoForm";
 import { TodoList } from "./components/TodoList";
 import { ErrorState } from "./components/common/ErrorState";
 import { LoadingState } from "./components/common/LoadingState";
+import { useTheme } from "./hooks/useTheme";
 import { useTodos } from "./hooks/useTodos";
 
 function App() {
+  const { theme, toggleTheme } = useTheme();
   const {
     todos,
     visibleTodos,
@@ -13,12 +17,11 @@ function App() {
     status,
     errorMessage,
     activeCount,
-    completedCount,
     setFilter,
     addTodo,
     toggleTodo,
+    editTodo,
     removeTodo,
-    clearCompleted,
   } = useTodos();
 
   const isReady = status === "ready";
@@ -26,47 +29,55 @@ function App() {
   const hasError = status === "error";
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-4 py-10">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-3xl font-semibold text-text-primary">Minhas tarefas</h1>
-        <p className="text-sm text-text-muted">
-          Organize seu dia. Tudo fica salvo no seu navegador.
-        </p>
-      </header>
+    <div className="flex min-h-screen flex-col bg-page md:flex-row">
+      <Sidebar />
 
-      <main className="flex flex-col gap-6">
-        <TodoForm onAdd={addTodo} disabled={!isReady} />
+      <div className="flex flex-1 flex-col">
+        <main
+          id="minhas-tarefas"
+          className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-8 md:px-10 md:py-12"
+        >
+          <header className="flex items-center justify-between gap-4">
+            <h1 className="text-4xl font-bold text-fg md:text-5xl">Minhas tarefas</h1>
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          </header>
 
-        {isLoading && <LoadingState label="Carregando suas tarefas..." />}
+          <TodoForm onAdd={addTodo} disabled={!isReady} />
 
-        {hasError && (
-          <ErrorState
-            message={errorMessage}
-            onRetry={() => window.location.reload()}
-          />
-        )}
+          {isLoading && <LoadingState label="Carregando suas tarefas..." />}
 
-        {isReady && (
-          <section className="flex flex-col gap-4">
-            <TodoList
-              todos={visibleTodos}
-              totalCount={todos.length}
-              onToggle={toggleTodo}
-              onRemove={removeTodo}
+          {hasError && (
+            <ErrorState
+              message={errorMessage}
+              onRetry={() => window.location.reload()}
             />
+          )}
 
-            {todos.length > 0 && (
-              <FilterBar
-                filter={filter}
-                activeCount={activeCount}
-                completedCount={completedCount}
-                onFilterChange={setFilter}
-                onClearCompleted={clearCompleted}
+          {isReady && (
+            <section className="flex flex-1 flex-col gap-6">
+              <TodoList
+                todos={visibleTodos}
+                totalCount={todos.length}
+                onToggle={toggleTodo}
+                onEdit={editTodo}
+                onRemove={removeTodo}
               />
-            )}
-          </section>
-        )}
-      </main>
+
+              {todos.length > 0 && (
+                <FilterBar
+                  filter={filter}
+                  activeCount={activeCount}
+                  onFilterChange={setFilter}
+                />
+              )}
+            </section>
+          )}
+
+          <footer className="mt-auto pt-6 text-center text-sm text-subtle">
+            © 2025
+          </footer>
+        </main>
+      </div>
     </div>
   );
 }

@@ -18,14 +18,31 @@ interface UseTodosResult {
   setFilter: (filter: Filter) => void;
   addTodo: (title: string) => void;
   toggleTodo: (id: string) => void;
+  editTodo: (id: string, title: string) => void;
   removeTodo: (id: string) => void;
   clearCompleted: () => void;
+}
+
+// Sample tasks that mirror the Figma design, seeded on first run so the app
+// opens on the "My Tasks" list screen. Clearing them reveals the empty state.
+function createSeedTodos(): Todo[] {
+  const now = Date.now();
+  return [
+    { id: generateId(), title: "Learn React", done: false, createdAt: now },
+    {
+      id: generateId(),
+      title: "Prototyping To-Do List",
+      done: true,
+      createdAt: now - 1,
+    },
+    { id: generateId(), title: "Push to Github", done: false, createdAt: now - 2 },
+  ];
 }
 
 function readFromStorage(): Todo[] {
   const raw = window.localStorage.getItem(STORAGE_KEY);
   if (raw === null) {
-    return [];
+    return createSeedTodos();
   }
   const parsed = JSON.parse(raw) as unknown;
   if (!Array.isArray(parsed)) {
@@ -92,6 +109,21 @@ export function useTodos(): UseTodosResult {
     );
   }, []);
 
+  const editTodo = useCallback((id: string, title: string) => {
+    const trimmed = title.trim();
+    if (trimmed.length === 0) {
+      return;
+    }
+    setTodos((prev) =>
+      prev.map((todo) => {
+        if (todo.id === id) {
+          return { ...todo, title: trimmed };
+        }
+        return todo;
+      }),
+    );
+  }, []);
+
   const removeTodo = useCallback((id: string) => {
     setTodos((prev) => prev.filter((todo) => todo.id !== id));
   }, []);
@@ -127,6 +159,7 @@ export function useTodos(): UseTodosResult {
     setFilter,
     addTodo,
     toggleTodo,
+    editTodo,
     removeTodo,
     clearCompleted,
   };

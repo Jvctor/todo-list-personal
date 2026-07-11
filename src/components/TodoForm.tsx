@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { useState, type SyntheticEvent } from "react";
+import { Plus } from "lucide-react";
 import { TITLE_MAX_LENGTH } from "../types/todo";
 
 interface TodoFormProps {
@@ -13,7 +14,7 @@ export function TodoForm({ onAdd, disabled = false }: TodoFormProps) {
   const isEmpty = trimmed.length === 0;
   const isSubmitDisabled = disabled || isEmpty;
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isSubmitDisabled) {
       return;
@@ -25,7 +26,7 @@ export function TodoForm({ onAdd, disabled = false }: TodoFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex w-full flex-col gap-2 sm:flex-row"
+      className="flex w-full flex-col gap-3 sm:flex-row"
       aria-label="Adicionar nova tarefa"
     >
       <label htmlFor="new-todo" className="sr-only">
@@ -37,17 +38,18 @@ export function TodoForm({ onAdd, disabled = false }: TodoFormProps) {
         value={title}
         onChange={(event) => setTitle(event.target.value.slice(0, TITLE_MAX_LENGTH))}
         maxLength={TITLE_MAX_LENGTH}
-        placeholder="O que precisa ser feito?"
+        placeholder="Digite sua tarefa aqui..."
         disabled={disabled}
         autoComplete="off"
-        className="flex-1 rounded-input border border-border bg-surface px-4 py-3 text-text-primary placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-soft disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex-1 rounded-field border border-field-border bg-field px-5 py-3 text-lg text-fg shadow-card placeholder:text-placeholder focus:outline-none focus:ring-2 focus:ring-fg/15 disabled:cursor-not-allowed disabled:opacity-60"
       />
       <button
         type="submit"
         disabled={isSubmitDisabled}
-        className="rounded-input bg-primary px-6 py-3 font-semibold text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex items-center justify-center gap-2 rounded-field bg-btn px-6 py-3 text-lg font-bold text-btn-fg shadow-card transition hover:bg-btn-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-fg/25 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Adicionar
+        <Plus className="h-5 w-5" aria-hidden="true" />
+        <span>Adicionar</span>
       </button>
     </form>
   );

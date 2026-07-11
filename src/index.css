@@ -1,24 +1,81 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode: `dark:` utilities apply under `.dark` */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens extracted from Figma "Simple To-Do List (Community)".
+ * Static tokens (font, radius, shadow) live in `@theme`.
+ * Theme-aware colors are declared as `--c-*` custom properties on `:root`
+ * and `.dark`, then mapped with `@theme inline` so the `bg-*`/`text-*`
+ * utilities resolve to `var(--c-*)` and swap automatically per theme.
+ */
 @theme {
-  --color-background: #0f1115;
-  --color-surface: #1a1d24;
-  --color-surface-elevated: #22262f;
-  --color-border: #2e333d;
-  --color-primary: #8b5cf6;
-  --color-primary-hover: #7c3aed;
-  --color-primary-soft: rgba(139, 92, 246, 0.12);
-  --color-text-primary: #f3f4f6;
-  --color-text-muted: #9ca3af;
-  --color-text-subtle: #6b7280;
-  --color-danger: #ef4444;
-  --color-danger-hover: #dc2626;
-  --color-success: #10b981;
-
-  --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
-
+  --font-sans: "Lato", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
   --radius-card: 12px;
-  --radius-input: 8px;
+  --radius-field: 12px;
+  --shadow-card: 0 2px 4px 0 rgb(0 0 0 / 0.25);
+  --shadow-sidebar: 0 4px 12px 0 rgb(0 0 0 / 0.25);
+}
+
+@theme inline {
+  --color-page: var(--c-page);
+  --color-sidebar: var(--c-sidebar);
+  --color-card: var(--c-card);
+  --color-field: var(--c-field);
+  --color-field-border: var(--c-field-border);
+  --color-fg: var(--c-fg);
+  --color-muted: var(--c-muted);
+  --color-subtle: var(--c-subtle);
+  --color-placeholder: var(--c-placeholder);
+  --color-divider: var(--c-divider);
+  --color-btn: var(--c-btn);
+  --color-btn-hover: var(--c-btn-hover);
+  --color-btn-fg: var(--c-btn-fg);
+  --color-nav: var(--c-nav);
+  --color-nav-fg: var(--c-nav-fg);
+  --color-accent: var(--c-accent);
+}
+
+/* Light theme (Figma light frames: page #F3F4F6) */
+:root {
+  --c-page: #f3f4f6;
+  --c-sidebar: #ffffff;
+  --c-card: #ffffff;
+  --c-field: #ffffff;
+  --c-field-border: #e5e7eb;
+  --c-fg: #333333;
+  --c-muted: #6a7282;
+  --c-subtle: #99a1af;
+  --c-placeholder: #a9a9a9;
+  --c-divider: #d1d5dc;
+  --c-btn: #000000;
+  --c-btn-hover: #1e2939;
+  --c-btn-fg: #ffffff;
+  --c-nav: #f3f4f6;
+  --c-nav-fg: #333333;
+  --c-accent: #fb2c5a;
+}
+
+/* Dark theme (Figma dark frames: page #101828) */
+.dark {
+  --c-page: #101828;
+  --c-sidebar: #1e2939;
+  --c-card: #1e2939;
+  --c-field: #364153;
+  --c-field-border: #4a5565;
+  --c-fg: #ffffff;
+  --c-muted: #6a7282;
+  --c-subtle: #99a1af;
+  --c-placeholder: #a9a9a9;
+  --c-divider: #4a5565;
+  --c-btn: #4a5565;
+  --c-btn-hover: #5a6577;
+  --c-btn-fg: #ffffff;
+  --c-nav: #f3f4f6;
+  --c-nav-fg: #333333;
+  --c-accent: #fb2c5a;
 }
 
 html,
@@ -30,8 +87,8 @@ body,
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
+  background-color: var(--c-page);
+  color: var(--c-fg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

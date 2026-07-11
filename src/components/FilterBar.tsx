@@ -1,12 +1,11 @@
+import { Fragment } from "react";
 import type { Filter } from "../types/todo";
 import { pluralize } from "../utils/pluralize";
 
 interface FilterBarProps {
   filter: Filter;
   activeCount: number;
-  completedCount: number;
   onFilterChange: (filter: Filter) => void;
-  onClearCompleted: () => void;
 }
 
 interface FilterOption {
@@ -22,55 +21,46 @@ const FILTER_OPTIONS: FilterOption[] = [
 
 function getButtonClasses(isSelected: boolean): string {
   const base =
-    "rounded-input px-3 py-1.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-primary-soft";
+    "rounded px-1 text-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-fg/25";
   if (isSelected) {
-    return `${base} bg-primary-soft text-primary`;
+    return `${base} font-bold text-fg`;
   }
-  return `${base} text-text-muted hover:text-text-primary`;
+  return `${base} text-muted hover:text-fg`;
 }
 
-export function FilterBar({
-  filter,
-  activeCount,
-  completedCount,
-  onFilterChange,
-  onClearCompleted,
-}: FilterBarProps) {
-  const hasCompleted = completedCount > 0;
-
+export function FilterBar({ filter, activeCount, onFilterChange }: FilterBarProps) {
   return (
-    <div className="flex flex-col items-center justify-between gap-3 border-t border-border pt-4 sm:flex-row">
-      <p className="text-xs text-text-muted">{pluralize(activeCount, "pendente", "pendentes")}</p>
-
+    <div className="flex flex-col items-center gap-3 border-t border-divider pt-5 sm:flex-row sm:justify-between">
       <div
         role="group"
         aria-label="Filtrar tarefas"
-        className="flex items-center gap-1"
+        className="flex items-center gap-3"
       >
-        {FILTER_OPTIONS.map((option) => {
+        {FILTER_OPTIONS.map((option, index) => {
           const isSelected = option.value === filter;
           return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => onFilterChange(option.value)}
-              aria-pressed={isSelected}
-              className={getButtonClasses(isSelected)}
-            >
-              {option.label}
-            </button>
+            <Fragment key={option.value}>
+              {index > 0 && (
+                <span aria-hidden="true" className="text-muted">
+                  |
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => onFilterChange(option.value)}
+                aria-pressed={isSelected}
+                className={getButtonClasses(isSelected)}
+              >
+                {option.label}
+              </button>
+            </Fragment>
           );
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={onClearCompleted}
-        disabled={!hasCompleted}
-        className="text-xs font-medium text-text-muted transition hover:text-danger disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-text-muted"
-      >
-        Limpar concluídas
-      </button>
+      <p className="text-base text-muted" aria-live="polite">
+        {pluralize(activeCount, "tarefa restante", "tarefas restantes")}
+      </p>
     </div>
   );
 }

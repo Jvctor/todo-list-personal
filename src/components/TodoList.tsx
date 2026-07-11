@@ -1,40 +1,50 @@
 import type { Todo } from "../types/todo";
 import { EmptyState } from "./common/EmptyState";
 import { TodoItem } from "./TodoItem";
+import emptyIllustration from "../assets/empty-illustration.png";
 
 interface TodoListProps {
   todos: Todo[];
   totalCount: number;
   onToggle: (id: string) => void;
+  onEdit: (id: string, title: string) => void;
   onRemove: (id: string) => void;
 }
 
-function getEmptyContent(totalCount: number) {
-  if (totalCount === 0) {
-    return {
-      title: "Sua lista está vazia",
-      description: "Adicione sua primeira tarefa acima para começar.",
-    };
+export function TodoList({
+  todos,
+  totalCount,
+  onToggle,
+  onEdit,
+  onRemove,
+}: TodoListProps) {
+  if (todos.length === 0 && totalCount === 0) {
+    return (
+      <EmptyState
+        title="Vazio como minha motivação numa segunda 😅. Bora adicionar tarefas!"
+        illustrationSrc={emptyIllustration}
+        illustrationAlt="Ilustração de uma pessoa animada tirando uma selfie"
+      />
+    );
   }
-  return {
-    title: "Nada por aqui",
-    description: "Nenhuma tarefa corresponde ao filtro selecionado.",
-  };
-}
 
-export function TodoList({ todos, totalCount, onToggle, onRemove }: TodoListProps) {
   if (todos.length === 0) {
-    const empty = getEmptyContent(totalCount);
-    return <EmptyState title={empty.title} description={empty.description} />;
+    return (
+      <EmptyState
+        title="Nada por aqui"
+        description="Nenhuma tarefa corresponde ao filtro selecionado."
+      />
+    );
   }
 
   return (
-    <ul className="flex flex-col gap-2" aria-label="Lista de tarefas">
+    <ul className="flex flex-col gap-3" aria-label="Lista de tarefas">
       {todos.map((todo) => (
         <TodoItem
           key={todo.id}
           todo={todo}
           onToggle={onToggle}
+          onEdit={onEdit}
           onRemove={onRemove}
         />
       ))}

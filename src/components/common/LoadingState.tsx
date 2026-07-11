@@ -7,11 +7,11 @@ export function LoadingState({ label = "Carregando..." }: LoadingStateProps) {
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-col items-center justify-center gap-3 py-16 text-text-muted"
+      className="flex flex-col items-center justify-center gap-3 py-16 text-muted"
     >
       <span
         aria-hidden="true"
-        className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary"
+        className="h-8 w-8 animate-spin rounded-full border-2 border-divider border-t-fg"
       />
       <p className="text-sm">{label}</p>
     </div>
