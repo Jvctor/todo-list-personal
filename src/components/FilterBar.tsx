@@ -21,7 +21,7 @@ const FILTER_OPTIONS: FilterOption[] = [
 
 function getButtonClasses(isSelected: boolean): string {
   const base =
-    "rounded px-1 text-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-fg/25";
+    "rounded px-1 text-base transition focus:outline-none focus-visible:ring-2 focus-visible:ring-fg/25 sm:text-lg";
   if (isSelected) {
     return `${base} font-bold text-fg`;
   }
@@ -58,7 +58,7 @@ export function FilterBar({ filter, activeCount, onFilterChange }: FilterBarProp
         })}
       </div>
 
-      <p className="text-base text-muted" aria-live="polite">
+      <p className="text-sm text-muted sm:text-base" aria-live="polite">
         {pluralize(activeCount, "tarefa restante", "tarefas restantes")}
       </p>
     </div>

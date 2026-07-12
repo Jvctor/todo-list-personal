@@ -8,6 +8,7 @@ interface TodoListProps {
   totalCount: number;
   onToggle: (id: string) => void;
   onEdit: (id: string, title: string) => void;
+  onSetDueAt: (id: string, dueAt: number | null) => void;
   onRemove: (id: string) => void;
 }
 
@@ -16,6 +17,7 @@ export function TodoList({
   totalCount,
   onToggle,
   onEdit,
+  onSetDueAt,
   onRemove,
 }: TodoListProps) {
   if (todos.length === 0 && totalCount === 0) {
@@ -45,6 +47,7 @@ export function TodoList({
           todo={todo}
           onToggle={onToggle}
           onEdit={onEdit}
+          onSetDueAt={onSetDueAt}
           onRemove={onRemove}
         />
       ))}

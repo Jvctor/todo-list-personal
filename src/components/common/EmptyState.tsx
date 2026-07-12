@@ -17,10 +17,10 @@ export function EmptyState({
         <img
           src={illustrationSrc}
           alt={illustrationAlt}
-          className="w-56 max-w-full"
+          className="w-44 max-w-full sm:w-56"
         />
       )}
-      <p className="max-w-md text-xl font-medium italic text-fg">{title}</p>
+      <p className="max-w-md text-lg font-medium italic text-fg sm:text-xl">{title}</p>
       {description && <p className="text-sm text-muted">{description}</p>}
     </div>
   );

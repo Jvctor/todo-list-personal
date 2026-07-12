@@ -1,9 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  onValue,
+  push,
+  ref,
+  remove,
+  update,
+  type DataSnapshot,
+} from "firebase/database";
 import type { Filter, Todo } from "../types/todo";
+import { getDb } from "../lib/firebase";
 import { getErrorMessage } from "../utils/errors";
-import { generateId } from "../utils/id";
-
-const STORAGE_KEY = "todo-list-personal:todos";
 
 type Status = "loading" | "ready" | "error";
 
@@ -16,121 +22,183 @@ interface UseTodosResult {
   activeCount: number;
   completedCount: number;
   setFilter: (filter: Filter) => void;
-  addTodo: (title: string) => void;
+  addTodo: (title: string, dueAt: number | null) => Promise<void>;
   toggleTodo: (id: string) => void;
   editTodo: (id: string, title: string) => void;
+  setDueAt: (id: string, dueAt: number | null) => void;
   removeTodo: (id: string) => void;
   clearCompleted: () => void;
 }
 
-// Sample tasks that mirror the Figma design, seeded on first run so the app
-// opens on the "My Tasks" list screen. Clearing them reveals the empty state.
-function createSeedTodos(): Todo[] {
-  const now = Date.now();
-  return [
-    { id: generateId(), title: "Learn React", done: false, createdAt: now },
-    {
-      id: generateId(),
-      title: "Prototyping To-Do List",
-      done: true,
-      createdAt: now - 1,
-    },
-    { id: generateId(), title: "Push to Github", done: false, createdAt: now - 2 },
-  ];
+// Campos gravados no nó da tarefa. `dueAt` é opcional: as regras do banco só
+// aceitam os campos declarados aqui, qualquer outro é rejeitado.
+interface TodoPayload {
+  title: string;
+  done: boolean;
+  createdAt: number;
+  dueAt?: number;
 }
 
-function readFromStorage(): Todo[] {
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (raw === null) {
-    return createSeedTodos();
+function asString(value: unknown, fallback: string): string {
+  if (typeof value === "string") {
+    return value;
   }
-  const parsed = JSON.parse(raw) as unknown;
-  if (!Array.isArray(parsed)) {
-    throw new Error("Formato inválido no armazenamento local.");
+  return fallback;
+}
+
+function asNumber(value: unknown): number {
+  if (typeof value === "number") {
+    return value;
   }
-  return parsed as Todo[];
+  return 0;
 }
 
-function writeToStorage(todos: Todo[]): void {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+function asOptionalNumber(value: unknown): number | null {
+  if (typeof value === "number") {
+    return value;
+  }
+  return null;
 }
 
-export function useTodos(): UseTodosResult {
+function childToTodo(child: DataSnapshot): Todo {
+  const data = child.val();
+  return {
+    id: child.key ?? "",
+    title: asString(data?.title, ""),
+    done: data?.done === true,
+    createdAt: asNumber(data?.createdAt),
+    dueAt: asOptionalNumber(data?.dueAt),
+  };
+}
+
+function todosPath(uid: string): string {
+  return `users/${uid}/todos`;
+}
+
+export function useTodos(uid: string): UseTodosResult {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
   const [status, setStatus] = useState<Status>("loading");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  // Keep the latest list in a ref so the write callbacks stay stable (they only
+  // depend on `uid`) while still reading fresh state.
+  const todosRef = useRef<Todo[]>([]);
   useEffect(() => {
-    try {
-      const loaded = readFromStorage();
-      setTodos(loaded);
-      setStatus("ready");
-    } catch (err) {
-      setErrorMessage(getErrorMessage(err, "Erro ao carregar tarefas."));
-      setStatus("error");
-    }
+    todosRef.current = todos;
+  }, [todos]);
+
+  const handleWriteError = useCallback((err: unknown) => {
+    setErrorMessage(getErrorMessage(err, "Erro ao salvar a alteração."));
+    setStatus("error");
   }, []);
 
   useEffect(() => {
-    if (status !== "ready") {
-      return;
-    }
-    try {
-      writeToStorage(todos);
-    } catch (err) {
-      setErrorMessage(getErrorMessage(err, "Erro ao salvar tarefas."));
-      setStatus("error");
-    }
-  }, [todos, status]);
-
-  const addTodo = useCallback((title: string) => {
-    const trimmed = title.trim();
-    if (trimmed.length === 0) {
-      return;
-    }
-    const next: Todo = {
-      id: generateId(),
-      title: trimmed,
-      done: false,
-      createdAt: Date.now(),
-    };
-    setTodos((prev) => [next, ...prev]);
-  }, []);
-
-  const toggleTodo = useCallback((id: string) => {
-    setTodos((prev) =>
-      prev.map((todo) => {
-        if (todo.id !== id) {
-          return todo;
-        }
-        return { ...todo, done: !todo.done };
-      }),
+    setStatus("loading");
+    const listRef = ref(getDb(), todosPath(uid));
+    const unsubscribe = onValue(
+      listRef,
+      (snapshot) => {
+        const list: Todo[] = [];
+        snapshot.forEach((child) => {
+          list.push(childToTodo(child));
+        });
+        // Newest first (Realtime Database returns children in key order).
+        list.sort((a, b) => b.createdAt - a.createdAt);
+        setTodos(list);
+        setStatus("ready");
+      },
+      (err) => {
+        setErrorMessage(getErrorMessage(err, "Erro ao carregar tarefas."));
+        setStatus("error");
+      },
     );
-  }, []);
+    return unsubscribe;
+  }, [uid]);
 
-  const editTodo = useCallback((id: string, title: string) => {
-    const trimmed = title.trim();
-    if (trimmed.length === 0) {
-      return;
-    }
-    setTodos((prev) =>
-      prev.map((todo) => {
-        if (todo.id === id) {
-          return { ...todo, title: trimmed };
-        }
-        return todo;
-      }),
-    );
-  }, []);
+  const addTodo = useCallback(
+    async (title: string, dueAt: number | null) => {
+      const trimmed = title.trim();
+      if (trimmed.length === 0) {
+        return;
+      }
+      const payload: TodoPayload = {
+        title: trimmed,
+        done: false,
+        createdAt: Date.now(),
+      };
+      if (dueAt !== null) {
+        payload.dueAt = dueAt;
+      }
+      try {
+        await push(ref(getDb(), todosPath(uid)), payload);
+      } catch (err) {
+        handleWriteError(err);
+      }
+    },
+    [uid, handleWriteError],
+  );
 
-  const removeTodo = useCallback((id: string) => {
-    setTodos((prev) => prev.filter((todo) => todo.id !== id));
-  }, []);
+  // Trocar o prazo também zera o `reminderSentAt` gravado pelo Worker, senão ele
+  // consideraria o lembrete já enviado e não avisaria na nova data.
+  const setDueAt = useCallback(
+    (id: string, dueAt: number | null) => {
+      const updates: Record<string, number | null> = {
+        dueAt,
+        reminderSentAt: null,
+      };
+      update(ref(getDb(), `${todosPath(uid)}/${id}`), updates).catch(
+        handleWriteError,
+      );
+    },
+    [uid, handleWriteError],
+  );
+
+  const toggleTodo = useCallback(
+    (id: string) => {
+      const target = todosRef.current.find((todo) => todo.id === id);
+      if (!target) {
+        return;
+      }
+      update(ref(getDb(), `${todosPath(uid)}/${id}`), {
+        done: !target.done,
+      }).catch(handleWriteError);
+    },
+    [uid, handleWriteError],
+  );
+
+  const editTodo = useCallback(
+    (id: string, title: string) => {
+      const trimmed = title.trim();
+      if (trimmed.length === 0) {
+        return;
+      }
+      update(ref(getDb(), `${todosPath(uid)}/${id}`), {
+        title: trimmed,
+      }).catch(handleWriteError);
+    },
+    [uid, handleWriteError],
+  );
+
+  const removeTodo = useCallback(
+    (id: string) => {
+      remove(ref(getDb(), `${todosPath(uid)}/${id}`)).catch(handleWriteError);
+    },
+    [uid, handleWriteError],
+  );
 
   const clearCompleted = useCallback(() => {
-    setTodos((prev) => prev.filter((todo) => !todo.done));
-  }, []);
+    const completed = todosRef.current.filter((todo) => todo.done);
+    if (completed.length === 0) {
+      return;
+    }
+    // Multi-path update: setting each completed node to null deletes it in one op.
+    const updates: Record<string, null> = {};
+    completed.forEach((todo) => {
+      updates[`${todosPath(uid)}/${todo.id}`] = null;
+    });
+    update(ref(getDb()), updates).catch(handleWriteError);
+  }, [uid, handleWriteError]);
 
   const visibleTodos = useMemo(() => {
     if (filter === "active") {
@@ -160,6 +228,7 @@ export function useTodos(): UseTodosResult {
     addTodo,
     toggleTodo,
     editTodo,
+    setDueAt,
     removeTodo,
     clearCompleted,
   };

@@ -1,0 +1,51 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "todos": {
+          ".indexOn": ["dueAt"],
+          "$todoId": {
+            ".validate": "newData.hasChildren(['title', 'done', 'createdAt'])",
+            "title": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 150"
+            },
+            "done": {
+              ".validate": "newData.isBoolean()"
+            },
+            "createdAt": {
+              ".validate": "newData.isNumber()"
+            },
+            "dueAt": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "reminderSentAt": {
+              ".validate": "newData.isNumber()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "devices": {
+          "$token": {
+            ".validate": "newData.hasChildren(['createdAt', 'timezone'])",
+            "createdAt": {
+              ".validate": "newData.isNumber()"
+            },
+            "timezone": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 64"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}
