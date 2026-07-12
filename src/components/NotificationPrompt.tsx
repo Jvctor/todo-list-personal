@@ -1,22 +1,69 @@
-import { Bell, Loader2 } from "lucide-react";
+import { Bell, Loader2, Share } from "lucide-react";
+
+export type PromptMode = "enable" | "install";
 
 interface NotificationPromptProps {
+  mode: PromptMode;
   isEnabling: boolean;
   errorMessage: string;
   onEnable: () => void;
 }
 
-export function NotificationPrompt({
+const CARD_CLASSES =
+  "flex flex-col gap-3 rounded-card border border-tangerine/35 bg-linear-to-br from-lemon/20 to-tangerine/15 p-4 sm:flex-row sm:items-center sm:gap-4";
+
+const ICON_CLASSES =
+  "grid h-11 w-11 shrink-0 place-items-center rounded-field bg-card text-tangerine shadow-card";
+
+// No iPhone não existe botão para pedir permissão: o Safari só libera Web Push
+// depois que o site vira app na Tela de Início. Então o card aqui não tem ação —
+// tem receita. Esconder o card (era o que acontecia antes) deixava o usuário sem
+// entender por que nunca chegava lembrete.
+//
+// A receita insiste no Safari de propósito: Chrome e Firefox no iPhone usam o
+// mesmo motor por baixo, mas o "Adicionar à Tela de Início" deles é menos
+// previsível. Mandar direto para o Safari evita o usuário procurar um item de
+// menu que talvez não esteja lá.
+function InstallPrompt() {
+  return (
+    <section aria-label="Instalar o app" className={CARD_CLASSES}>
+      <span className={`${ICON_CLASSES} animate-bell-ring`}>
+        <Share className="h-5 w-5" aria-hidden="true" />
+      </span>
+
+      <div className="flex-1">
+        <p className="font-display text-base font-semibold text-fg">
+          Instale para receber lembretes
+        </p>
+        <p className="text-sm text-muted">
+          No iPhone, as notificações só chegam para apps na Tela de Início. Abra
+          este site no <strong className="font-bold text-fg">Safari</strong>,
+          toque em <strong className="font-bold text-fg">Compartilhar</strong> e
+          depois em{" "}
+          <strong className="font-bold text-fg">
+            Adicionar à Tela de Início
+          </strong>
+          . Abra o app pelo ícone e o botão de ativar aparece aqui.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+interface EnablePromptProps {
+  isEnabling: boolean;
+  errorMessage: string;
+  onEnable: () => void;
+}
+
+function EnablePrompt({
   isEnabling,
   errorMessage,
   onEnable,
-}: NotificationPromptProps) {
+}: EnablePromptProps) {
   return (
-    <section
-      aria-label="Ativar notificações"
-      className="flex flex-col gap-3 rounded-card border border-tangerine/35 bg-linear-to-br from-lemon/20 to-tangerine/15 p-4 sm:flex-row sm:items-center sm:gap-4"
-    >
-      <span className="grid h-11 w-11 shrink-0 animate-bell-ring place-items-center rounded-field bg-card text-tangerine shadow-card">
+    <section aria-label="Ativar notificações" className={CARD_CLASSES}>
+      <span className={`${ICON_CLASSES} animate-bell-ring`}>
         <Bell className="h-5 w-5" aria-hidden="true" />
       </span>
 
@@ -46,5 +93,23 @@ export function NotificationPrompt({
         <span>Ativar</span>
       </button>
     </section>
+  );
+}
+
+export function NotificationPrompt({
+  mode,
+  isEnabling,
+  errorMessage,
+  onEnable,
+}: NotificationPromptProps) {
+  if (mode === "install") {
+    return <InstallPrompt />;
+  }
+  return (
+    <EnablePrompt
+      isEnabling={isEnabling}
+      errorMessage={errorMessage}
+      onEnable={onEnable}
+    />
   );
 }

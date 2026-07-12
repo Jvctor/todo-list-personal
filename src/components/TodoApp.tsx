@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import type { User } from "firebase/auth";
 import { FilterBar } from "./FilterBar";
-import { NotificationPrompt } from "./NotificationPrompt";
+import { NotificationPrompt, type PromptMode } from "./NotificationPrompt";
 import { ProgressCard } from "./ProgressCard";
 import { Sidebar } from "./Sidebar";
 import { ThemeToggle } from "./ThemeToggle";
@@ -79,8 +79,18 @@ export function TodoApp({ user, theme, onToggleTheme, onSignOut }: TodoAppProps)
   const hasError = status === "error";
 
   // "denied" continua mostrando o aviso: é onde explicamos como desbloquear.
-  // "granted", "unsupported" e "checking" não pedem nada ao usuário.
-  const shouldAskForPush = pushStatus === "default" || pushStatus === "denied";
+  // "needs-install" mostra a receita do iPhone. "granted", "unsupported" e
+  // "checking" não pedem nada ao usuário.
+  const needsInstall = pushStatus === "needs-install";
+  const shouldAskForPush =
+    pushStatus === "default" || pushStatus === "denied" || needsInstall;
+
+  function getPromptMode(): PromptMode {
+    if (needsInstall) {
+      return "install";
+    }
+    return "enable";
+  }
 
   const lateCount = todos.filter(
     (todo) => !todo.done && todo.dueAt !== null && todo.dueAt < Date.now(),
@@ -142,6 +152,7 @@ export function TodoApp({ user, theme, onToggleTheme, onSignOut }: TodoAppProps)
 
           {shouldAskForPush && (
             <NotificationPrompt
+              mode={getPromptMode()}
               isEnabling={isEnablingPush}
               errorMessage={pushErrorMessage}
               onEnable={enablePush}

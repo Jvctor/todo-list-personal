@@ -15,3 +15,10 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+// Propriedade antiga do Safari, fora do padrão mas ainda a que responde em parte
+// dos iPhones: diz se o site está aberto pela Tela de Início. Declarada aqui para
+// não precisar de `any` (regra #7).
+interface Navigator {
+  readonly standalone?: boolean;
+}

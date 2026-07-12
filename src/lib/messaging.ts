@@ -36,3 +36,21 @@ export async function requestPushToken(): Promise<string> {
 export function getDeviceTimezone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
+
+// O iPad moderno se apresenta como Mac; o toque é o que o entrega.
+export function isIosDevice(): boolean {
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+    return true;
+  }
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+}
+
+// No iOS, Web Push só existe quando o site foi instalado na Tela de Início.
+// `display-mode: standalone` cobre os navegadores modernos; `navigator.standalone`
+// é a propriedade antiga do Safari, que ainda é a que responde em parte dos iPhones.
+export function isStandaloneApp(): boolean {
+  if (window.matchMedia("(display-mode: standalone)").matches) {
+    return true;
+  }
+  return navigator.standalone === true;
+}

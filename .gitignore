@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Cache local do deploy do Firebase Hosting — estado da máquina, não do projeto.
+.firebase/
+
 # Environment (Firebase config, secrets) — keep .env out of git, commit .env.example
 .env
 .env.*

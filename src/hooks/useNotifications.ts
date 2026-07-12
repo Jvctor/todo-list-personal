@@ -3,15 +3,20 @@ import { ref, set } from "firebase/database";
 import { getDb, isFirebaseConfigured } from "../lib/firebase";
 import {
   getDeviceTimezone,
+  isIosDevice,
   isPushConfigured,
   isPushSupported,
+  isStandaloneApp,
   requestPushToken,
 } from "../lib/messaging";
 
 // "checking" cobre a checagem inicial de suporte, que é assíncrona.
-// "unsupported" = navegador sem Push API (ex.: Safari fora da tela de início).
+// "needs-install" = iPhone/iPad fora da Tela de Início. Não é falta de suporte:
+//   é um passo que o usuário PODE dar, e por isso merece instrução, não silêncio.
+// "unsupported" = navegador que realmente não tem Push API, e não há o que fazer.
 type PushStatus =
   | "checking"
+  | "needs-install"
   | "unsupported"
   | "default"
   | "granted"
@@ -79,6 +84,12 @@ export function useNotifications(uid: string): UseNotificationsResult {
         return;
       }
       if (!supported) {
+        // No iPhone, "não suportado" quase sempre significa "ainda não instalado".
+        // Tratar os dois como a mesma coisa deixaria o usuário sem saída.
+        if (isIosDevice() && !isStandaloneApp()) {
+          setStatus("needs-install");
+          return;
+        }
         setStatus("unsupported");
         return;
       }
