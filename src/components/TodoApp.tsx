@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import type { User } from "firebase/auth";
-import { FilterBar } from "./FilterBar";
+import { DayNav } from "./DayNav";
 import { NotificationPrompt, type PromptMode } from "./NotificationPrompt";
 import { ProgressCard } from "./ProgressCard";
 import { Sidebar } from "./Sidebar";
@@ -24,14 +24,15 @@ interface TodoAppProps {
 
 export function TodoApp({ user, theme, onToggleTheme, onSignOut }: TodoAppProps) {
   const {
-    todos,
     visibleTodos,
-    filter,
+    selectedDay,
     status,
     errorMessage,
-    activeCount,
-    completedCount,
-    setFilter,
+    dayDoneCount,
+    dayTotalCount,
+    goToPreviousDay,
+    goToNextDay,
+    goToToday,
     addTodo,
     toggleTodo,
     editTodo,
@@ -92,23 +93,25 @@ export function TodoApp({ user, theme, onToggleTheme, onSignOut }: TodoAppProps)
     return "enable";
   }
 
-  const lateCount = todos.filter(
+  const pendingCount = dayTotalCount - dayDoneCount;
+  const lateCount = visibleTodos.filter(
     (todo) => !todo.done && todo.dueAt !== null && todo.dueAt < Date.now(),
   ).length;
 
-  // O subtítulo é a única linha que muda de humor conforme a lista: atrasado
-  // primeiro, porque é o que exige ação.
+  // Tudo aqui fala do dia que está na tela, não da vida inteira. Somar os atrasos
+  // de todos os dias daria um número que só cresce e não pede ação nenhuma —
+  // "47 tarefas atrasadas" não é informação, é sentença.
   function getSubtitle(): string {
+    if (dayTotalCount === 0) {
+      return "Nada marcado para esse dia.";
+    }
+    if (pendingCount === 0) {
+      return "Tudo feito nesse dia. Aproveita.";
+    }
     if (lateCount > 0) {
       return `${pluralize(lateCount, "tarefa atrasada", "tarefas atrasadas")}. Bora resolver.`;
     }
-    if (todos.length === 0) {
-      return "Sua lista está limpa.";
-    }
-    if (activeCount === 0) {
-      return "Nada pendente. Aproveita.";
-    }
-    return "Nada atrasado por aqui.";
+    return `${pluralize(pendingCount, "tarefa pendente", "tarefas pendentes")}.`;
   }
 
   return (
@@ -146,8 +149,8 @@ export function TodoApp({ user, theme, onToggleTheme, onSignOut }: TodoAppProps)
             <ThemeToggle theme={theme} onToggle={onToggleTheme} />
           </header>
 
-          {isReady && todos.length > 0 && (
-            <ProgressCard doneCount={completedCount} totalCount={todos.length} />
+          {isReady && dayTotalCount > 0 && (
+            <ProgressCard doneCount={dayDoneCount} totalCount={dayTotalCount} />
           )}
 
           {shouldAskForPush && (
@@ -172,21 +175,20 @@ export function TodoApp({ user, theme, onToggleTheme, onSignOut }: TodoAppProps)
 
           {isReady && (
             <section className="flex flex-1 flex-col gap-4">
-              {todos.length > 0 && (
-                <FilterBar
-                  filter={filter}
-                  activeCount={activeCount}
-                  onFilterChange={setFilter}
-                />
-              )}
+              <DayNav
+                selectedDay={selectedDay}
+                remainingCount={pendingCount}
+                onPrevious={goToPreviousDay}
+                onNext={goToNextDay}
+                onToday={goToToday}
+              />
 
-              {/* A `key` é o filtro: trocar de aba remonta a lista e a animação
-                  de entrada roda de novo. Marcar uma tarefa não remonta nada —
-                  senão a lista inteira piscaria a cada clique no checkbox. */}
-              <div key={filter} className="list-enter">
+              {/* A `key` é o dia: virar a página remonta a lista e a animação de
+                  entrada roda de novo. Marcar uma tarefa não remonta nada — senão
+                  a lista inteira piscaria a cada clique no checkbox. */}
+              <div key={selectedDay} className="list-enter">
                 <TodoList
                   todos={visibleTodos}
-                  totalCount={todos.length}
                   onToggle={toggleTodo}
                   onEdit={editTodo}
                   onSetDueAt={setDueAt}

@@ -1,32 +1,46 @@
 import { useState, type SyntheticEvent } from "react";
 import { Plus } from "lucide-react";
-import { TITLE_MAX_LENGTH } from "../types/todo";
+import { TITLE_MAX_LENGTH, type Repeat } from "../types/todo";
 import { DateTimePicker } from "./common/DateTimePicker";
+import { RepeatSelect } from "./common/RepeatSelect";
 
 interface TodoFormProps {
-  onAdd: (title: string, dueAt: number | null) => Promise<void>;
+  onAdd: (title: string, dueAt: number, repeat: Repeat | null) => Promise<void>;
   disabled?: boolean;
 }
 
 export function TodoForm({ onAdd, disabled = false }: TodoFormProps) {
   const [title, setTitle] = useState("");
   const [due, setDue] = useState<number | null>(null);
+  const [repeat, setRepeat] = useState<Repeat | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const trimmed = title.trim();
   const isEmpty = trimmed.length === 0;
-  const isSubmitDisabled = disabled || isEmpty || isSubmitting;
+  // A data virou obrigatória: numa tela que é um dia, tarefa sem data não teria
+  // onde ser desenhada. Melhor barrar na entrada do que aceitar e sumir com ela.
+  const isSubmitDisabled = disabled || isEmpty || due === null || isSubmitting;
+
+  // Tirar a data derruba a repetição junto. Deixar "toda semana" preso num campo
+  // travado seria uma escolha invisível que o usuário não consegue mais desfazer.
+  function handleDueChange(value: number | null) {
+    setDue(value);
+    if (value === null) {
+      setRepeat(null);
+    }
+  }
 
   async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (isSubmitDisabled) {
+    if (isSubmitDisabled || due === null) {
       return;
     }
     setIsSubmitting(true);
     try {
-      await onAdd(trimmed, due);
+      await onAdd(trimmed, due, repeat);
       setTitle("");
       setDue(null);
+      setRepeat(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -68,10 +82,25 @@ export function TodoForm({ onAdd, disabled = false }: TodoFormProps) {
 
       <DateTimePicker
         value={due}
-        onChange={setDue}
+        onChange={handleDueChange}
         label="Lembrete da nova tarefa"
         disabled={disabled || isSubmitting}
       />
+
+      <RepeatSelect
+        value={repeat}
+        onChange={setRepeat}
+        disabled={due === null || disabled || isSubmitting}
+      />
+
+      {/* O botão desabilitado sozinho não explica nada. A dica só aparece depois
+          que há um título — antes disso o formulário está vazio, e cobrar data de
+          um campo em branco seria ranzinza. */}
+      {!isEmpty && due === null && (
+        <p className="text-xs font-semibold text-muted">
+          Escolha uma data: toda tarefa mora num dia da agenda.
+        </p>
+      )}
     </form>
   );
 }

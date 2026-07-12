@@ -6,8 +6,8 @@ import {
   type KeyboardEvent,
   type MouseEvent,
 } from "react";
-import { Check, Clock, Pencil, Trash2, X } from "lucide-react";
-import { TITLE_MAX_LENGTH, type Todo } from "../types/todo";
+import { Check, Clock, Pencil, Repeat as RepeatIcon, Trash2, X } from "lucide-react";
+import { REPEAT_LABELS, TITLE_MAX_LENGTH, type Repeat, type Todo } from "../types/todo";
 import { DateTimePicker } from "./common/DateTimePicker";
 import { celebrate } from "../utils/confetti";
 import { formatDueLabel, isOverdue } from "../utils/dates";
@@ -16,7 +16,7 @@ interface TodoItemProps {
   todo: Todo;
   onToggle: (id: string) => void;
   onEdit: (id: string, title: string) => void;
-  onSetDueAt: (id: string, dueAt: number | null) => void;
+  onSetDueAt: (id: string, dueAt: number) => void;
   onRemove: (id: string) => void;
 }
 
@@ -42,6 +42,15 @@ function getToggleLabel(todo: Todo): string {
     return `Reabrir "${todo.title}"`;
   }
   return `Concluir "${todo.title}"`;
+}
+
+// Apagar uma ocorrência apaga a série inteira (senão a reposição a recriaria). O
+// rótulo precisa dizer isso — o usuário não pode descobrir depois do clique.
+function getRemoveLabel(todo: Todo): string {
+  if (todo.repeat !== null) {
+    return `Remover "${todo.title}" e todas as repetições`;
+  }
+  return `Remover "${todo.title}"`;
 }
 
 // Em edição o card sobe para `z-20` e PERDE o `hover:-translate-y-0.5`. Os dois
@@ -84,6 +93,19 @@ function DueChip({ dueAt, done }: DueChipProps) {
       {!late && <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
       <span className="sr-only">{late && "Lembrete atrasado:"}</span>
       <span>{formatDueLabel(dueAt)}</span>
+    </p>
+  );
+}
+
+interface RepeatChipProps {
+  repeat: Repeat;
+}
+
+function RepeatChip({ repeat }: RepeatChipProps) {
+  return (
+    <p className="flex w-fit items-center gap-1.5 text-xs font-bold text-muted">
+      <RepeatIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <span>{REPEAT_LABELS[repeat]}</span>
     </p>
   );
 }
@@ -139,7 +161,9 @@ export function TodoItem({
     if (trimmed !== todo.title) {
       onEdit(todo.id, trimmed);
     }
-    if (dueDraft !== todo.dueAt) {
+    // Limpar a data não é mais uma opção: a tarefa precisa de um dia para existir
+    // na agenda. Apagar o campo simplesmente mantém a data que já estava.
+    if (dueDraft !== null && dueDraft !== todo.dueAt) {
       onSetDueAt(todo.id, dueDraft);
     }
     setIsEditing(false);
@@ -193,9 +217,12 @@ export function TodoItem({
             <span className={getTitleClasses(todo.done)} data-done={todo.done}>
               {todo.title}
             </span>
-            {todo.dueAt !== null && (
-              <DueChip dueAt={todo.dueAt} done={todo.done} />
-            )}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              {todo.dueAt !== null && (
+                <DueChip dueAt={todo.dueAt} done={todo.done} />
+              )}
+              {todo.repeat !== null && <RepeatChip repeat={todo.repeat} />}
+            </div>
           </div>
 
           {/* No desktop as ações só aparecem no hover, deixando a linha limpa em
@@ -214,7 +241,7 @@ export function TodoItem({
             <button
               type="button"
               onClick={() => onRemove(todo.id)}
-              aria-label={`Remover "${todo.title}"`}
+              aria-label={getRemoveLabel(todo)}
               className="grid h-9 w-9 place-items-center rounded-xl text-muted transition hover:scale-110 hover:bg-accent/10 hover:text-accent focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -259,11 +286,27 @@ export function TodoItem({
             </button>
           </div>
 
-          <DateTimePicker
-            value={dueDraft}
-            onChange={setDueDraft}
-            label={`Lembrete da tarefa "${todo.title}"`}
-          />
+          {/* Numa ocorrência de série a data não se edita: quem manda é a regra da
+              repetição. Se o usuário mudasse a data de uma ocorrência solta, a
+              reposição a recriaria na data certa na próxima abertura, e ele veria
+              a tarefa duplicada. Renomear, sim — vale para a série inteira. */}
+          {todo.repeat === null && (
+            <DateTimePicker
+              value={dueDraft}
+              onChange={setDueDraft}
+              label={`Lembrete da tarefa "${todo.title}"`}
+            />
+          )}
+
+          {todo.repeat !== null && (
+            <p className="flex items-center gap-1.5 text-xs text-muted">
+              <RepeatIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>
+                A data vem da repetição ({REPEAT_LABELS[todo.repeat].toLowerCase()}).
+                Renomear aqui vale para todas as repetições.
+              </span>
+            </p>
+          )}
         </div>
       )}
     </li>

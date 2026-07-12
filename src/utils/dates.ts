@@ -20,6 +20,14 @@ const MONTH_YEAR_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
   year: "numeric",
 });
 
+const DAY_MONTH_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+});
+
+export const DAY_MS = 24 * 60 * 60 * 1000;
+
 // Hora usada quando o usuário escolhe um dia sem ter mexido no horário.
 export const DEFAULT_DUE_TIME = "09:00";
 
@@ -93,6 +101,44 @@ export function combineDateAndTime(date: Date, time: string): number {
   const result = new Date(date);
   result.setHours(hour, minute, 0, 0);
   return result.getTime();
+}
+
+// Meia-noite do dia do timestamp. É o corte usado pela recorrência: uma ocorrência
+// vencida só some na virada do dia, não na hora — senão a tarefa das 09:00
+// desapareceria às 09:01 e o usuário nunca a veria.
+export function startOfDay(timestamp: number): number {
+  const date = new Date(timestamp);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+}
+
+// Andar de dia pela data, não somando 24h em milissegundos: no dia da virada do
+// horário de verão o dia tem 23 ou 25 horas, e a conta por ms cairia no dia errado.
+export function addDays(timestamp: number, amount: number): number {
+  const date = new Date(timestamp);
+  date.setDate(date.getDate() + amount);
+  return date.getTime();
+}
+
+export function formatDayLabel(dayStart: number): string {
+  const label = DAY_MONTH_FORMATTER.format(new Date(dayStart));
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+// "Hoje" e "Ontem" pesam mais do que a data: é assim que a pessoa pensa no dia.
+// Quem está longe dessa janela lê a data mesmo, que aí é o que identifica.
+export function getRelativeDayName(dayStart: number, now: number): string | null {
+  const distance = Math.round((dayStart - startOfDay(now)) / DAY_MS);
+  if (distance === 0) {
+    return "Hoje";
+  }
+  if (distance === 1) {
+    return "Amanhã";
+  }
+  if (distance === -1) {
+    return "Ontem";
+  }
+  return null;
 }
 
 export function isSameDay(date: Date, timestamp: number): boolean {

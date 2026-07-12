@@ -23,6 +23,15 @@
             "reminderSentAt": {
               ".validate": "newData.isNumber()"
             },
+            "repeat": {
+              ".validate": "newData.isString() && newData.val().matches(/^(daily|weekly|monthly)$/)"
+            },
+            "seriesId": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 64"
+            },
+            "seriesStartAt": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
             "$other": {
               ".validate": false
             }
