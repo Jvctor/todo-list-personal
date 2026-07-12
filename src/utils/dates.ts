@@ -1,6 +1,5 @@
-// Helpers para o prazo (`dueAt`) da tarefa. O `<input type="datetime-local">`
-// trabalha com a string "AAAA-MM-DDTHH:MM" no fuso LOCAL, enquanto o banco guarda
-// um timestamp em ms — estas funções fazem a ponte entre os dois.
+// Helpers para o prazo (`dueAt`) da tarefa. O banco guarda um timestamp em ms;
+// a UI trabalha com dia + hora separados. Estas funções fazem a ponte.
 
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
@@ -9,34 +8,124 @@ const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
   minute: "2-digit",
 });
 
+const FULL_DATE_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+const MONTH_YEAR_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
+  month: "long",
+  year: "numeric",
+});
+
+// Hora usada quando o usuário escolhe um dia sem ter mexido no horário.
+export const DEFAULT_DUE_TIME = "09:00";
+
+export const WEEKDAY_INITIALS = ["D", "S", "T", "Q", "Q", "S", "S"];
+
 function pad(value: number): string {
   return String(value).padStart(2, "0");
-}
-
-export function toDateTimeLocalValue(timestamp: number): string {
-  const date = new Date(timestamp);
-  const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-  const time = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  return `${day}T${time}`;
-}
-
-// Devolve `null` quando o campo está vazio ou a data é inválida, para o chamador
-// tratar "sem prazo" e "prazo inválido" do mesmo jeito: não grava nada.
-export function fromDateTimeLocalValue(value: string): number | null {
-  if (value.length === 0) {
-    return null;
-  }
-  const timestamp = new Date(value).getTime();
-  if (Number.isNaN(timestamp)) {
-    return null;
-  }
-  return timestamp;
 }
 
 export function formatDueLabel(timestamp: number): string {
   return DATE_TIME_FORMATTER.format(new Date(timestamp));
 }
 
+export function formatFullDate(date: Date): string {
+  return FULL_DATE_FORMATTER.format(date);
+}
+
+export function formatMonthYear(date: Date): string {
+  const label = MONTH_YEAR_FORMATTER.format(date);
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 export function isOverdue(timestamp: number, now: number): boolean {
   return timestamp < now;
+}
+
+export interface TimeParts {
+  hour: number;
+  minute: number;
+}
+
+export function extractTime(timestamp: number): string {
+  const date = new Date(timestamp);
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+export function formatTimeValue(hour: number, minute: number): string {
+  return `${pad(hour)}:${pad(minute)}`;
+}
+
+// `Number("")` é 0, não NaN — então uma hora vazia viraria meia-noite em silêncio.
+// Por isso a validação testa a string, não só o resultado da conversão.
+export function parseTimeValue(time: string): TimeParts {
+  const [rawHour, rawMinute] = time.split(":");
+  const hour = Number(rawHour);
+  const minute = Number(rawMinute);
+
+  const isValid =
+    rawHour !== undefined &&
+    rawHour.length > 0 &&
+    rawMinute !== undefined &&
+    rawMinute.length > 0 &&
+    Number.isInteger(hour) &&
+    Number.isInteger(minute) &&
+    hour >= 0 &&
+    hour <= 23 &&
+    minute >= 0 &&
+    minute <= 59;
+
+  if (isValid) {
+    return { hour, minute };
+  }
+  const [defaultHour, defaultMinute] = DEFAULT_DUE_TIME.split(":");
+  return { hour: Number(defaultHour), minute: Number(defaultMinute) };
+}
+
+// Junta o dia escolhido no calendário com a hora escolhida. Meia-noite (00:00) é
+// um horário legítimo e precisa sobreviver a essa combinação.
+export function combineDateAndTime(date: Date, time: string): number {
+  const { hour, minute } = parseTimeValue(time);
+  const result = new Date(date);
+  result.setHours(hour, minute, 0, 0);
+  return result.getTime();
+}
+
+export function isSameDay(date: Date, timestamp: number): boolean {
+  const other = new Date(timestamp);
+  return (
+    date.getFullYear() === other.getFullYear() &&
+    date.getMonth() === other.getMonth() &&
+    date.getDate() === other.getDate()
+  );
+}
+
+export function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+export function addMonths(date: Date, amount: number): Date {
+  return new Date(date.getFullYear(), date.getMonth() + amount, 1);
+}
+
+// Células do calendário: `null` são os espaços vazios antes do dia 1, para que a
+// primeira semana comece na coluna certa.
+export function getMonthCells(view: Date): Array<Date | null> {
+  const year = view.getFullYear();
+  const month = view.getMonth();
+  const leadingBlanks = new Date(year, month, 1).getDay();
+  const totalDays = new Date(year, month + 1, 0).getDate();
+
+  const cells: Array<Date | null> = [];
+  for (let index = 0; index < leadingBlanks; index += 1) {
+    cells.push(null);
+  }
+  for (let day = 1; day <= totalDays; day += 1) {
+    cells.push(new Date(year, month, day));
+  }
+  return cells;
 }

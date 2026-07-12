@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import type { Filter } from "../types/todo";
 import { pluralize } from "../utils/pluralize";
 
@@ -19,47 +18,37 @@ const FILTER_OPTIONS: FilterOption[] = [
   { value: "completed", label: "Concluídas" },
 ];
 
-function getButtonClasses(isSelected: boolean): string {
+function getPillClasses(isSelected: boolean): string {
   const base =
-    "rounded px-1 text-base transition focus:outline-none focus-visible:ring-2 focus-visible:ring-fg/25 sm:text-lg";
+    "rounded-full border px-4 py-1.5 text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
   if (isSelected) {
-    return `${base} font-bold text-fg`;
+    return `${base} border-fg bg-fg text-page`;
   }
-  return `${base} text-muted hover:text-fg`;
+  return `${base} border-field-border bg-card text-muted hover:-translate-y-0.5 hover:text-fg`;
 }
 
 export function FilterBar({ filter, activeCount, onFilterChange }: FilterBarProps) {
   return (
-    <div className="flex flex-col items-center gap-3 border-t border-divider pt-5 sm:flex-row sm:justify-between">
-      <div
-        role="group"
-        aria-label="Filtrar tarefas"
-        className="flex items-center gap-3"
-      >
-        {FILTER_OPTIONS.map((option, index) => {
+    <div className="flex flex-wrap items-center gap-2">
+      <div role="group" aria-label="Filtrar tarefas" className="flex flex-wrap gap-2">
+        {FILTER_OPTIONS.map((option) => {
           const isSelected = option.value === filter;
           return (
-            <Fragment key={option.value}>
-              {index > 0 && (
-                <span aria-hidden="true" className="text-muted">
-                  |
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => onFilterChange(option.value)}
-                aria-pressed={isSelected}
-                className={getButtonClasses(isSelected)}
-              >
-                {option.label}
-              </button>
-            </Fragment>
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onFilterChange(option.value)}
+              aria-pressed={isSelected}
+              className={getPillClasses(isSelected)}
+            >
+              {option.label}
+            </button>
           );
         })}
       </div>
 
-      <p className="text-sm text-muted sm:text-base" aria-live="polite">
-        {pluralize(activeCount, "tarefa restante", "tarefas restantes")}
+      <p className="ml-auto text-sm font-semibold text-muted" aria-live="polite">
+        {pluralize(activeCount, "restante", "restantes")}
       </p>
     </div>
   );

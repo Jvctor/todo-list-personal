@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import type { Theme } from "../hooks/useTheme";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -56,18 +56,26 @@ export function AuthScreen({
       </div>
 
       <main className="w-full max-w-sm">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-fg sm:text-4xl">Minhas tarefas</h1>
-          <p className="mt-2 text-sm text-muted">
+        <header className="mb-8 flex flex-col items-center text-center">
+          <span
+            aria-hidden="true"
+            className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-linear-to-br from-accent to-tangerine text-white shadow-pop"
+          >
+            <Check className="h-7 w-7" strokeWidth={3} />
+          </span>
+          <h1 className="font-display text-3xl font-bold text-fg sm:text-4xl">
+            Minhas tarefas
+          </h1>
+          <p className="mt-1 text-sm text-muted">
             Entre com sua conta Google para organizar suas tarefas.
           </p>
         </header>
 
         <section
           aria-label="Entrar"
-          className="flex flex-col gap-4 rounded-card bg-card p-6 shadow-card sm:p-8"
+          className="flex flex-col gap-4 rounded-card border border-field-border bg-card p-6 shadow-card sm:p-8"
         >
-          <h2 className="text-xl font-bold text-fg">Entrar</h2>
+          <h2 className="font-display text-xl font-semibold text-fg">Entrar</h2>
 
           {errorMessage && (
             <p role="alert" className="text-sm text-accent">
@@ -86,7 +94,7 @@ export function AuthScreen({
             type="button"
             onClick={onGoogle}
             disabled={isButtonDisabled}
-            className="flex items-center justify-center gap-3 rounded-field border border-field-border bg-field px-6 py-3 text-base font-medium text-fg transition hover:bg-fg/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-fg/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center justify-center gap-3 rounded-full border border-field-border bg-sunken px-6 py-3 text-base font-bold text-fg transition hover:-translate-y-0.5 hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting && (
               <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />

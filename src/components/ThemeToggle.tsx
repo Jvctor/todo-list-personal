@@ -28,9 +28,9 @@ export function ThemeToggle({ theme, onToggle }: ThemeToggleProps) {
       onClick={onToggle}
       aria-label={label}
       title={label}
-      className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-fg transition hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-fg/20 dark:hover:bg-white/10"
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-field border border-field-border bg-card text-fg shadow-card transition hover:-translate-y-0.5 hover:-rotate-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
     >
-      <Icon className="h-7 w-7" strokeWidth={2} aria-hidden="true" />
+      <Icon className="h-5 w-5" strokeWidth={2.2} aria-hidden="true" />
     </button>
   );
 }

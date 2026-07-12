@@ -1,7 +1,6 @@
 import type { Todo } from "../types/todo";
 import { EmptyState } from "./common/EmptyState";
 import { TodoItem } from "./TodoItem";
-import emptyIllustration from "../assets/empty-illustration.png";
 
 interface TodoListProps {
   todos: Todo[];
@@ -23,9 +22,8 @@ export function TodoList({
   if (todos.length === 0 && totalCount === 0) {
     return (
       <EmptyState
-        title="Vazio como minha motivação numa segunda 😅. Bora adicionar tarefas!"
-        illustrationSrc={emptyIllustration}
-        illustrationAlt="Ilustração de uma pessoa animada tirando uma selfie"
+        title="Nada por aqui ainda"
+        description="Escreva sua primeira tarefa ali em cima."
       />
     );
   }
@@ -33,14 +31,14 @@ export function TodoList({
   if (todos.length === 0) {
     return (
       <EmptyState
-        title="Nada por aqui"
-        description="Nenhuma tarefa corresponde ao filtro selecionado."
+        title="Nada neste filtro"
+        description="Troque o filtro para ver as outras."
       />
     );
   }
 
   return (
-    <ul className="flex flex-col gap-3" aria-label="Lista de tarefas">
+    <ul className="flex flex-col gap-2.5" aria-label="Lista de tarefas">
       {todos.map((todo) => (
         <TodoItem
           key={todo.id}

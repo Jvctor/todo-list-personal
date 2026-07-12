@@ -14,20 +14,21 @@ export function NotificationPrompt({
   return (
     <section
       aria-label="Ativar notificações"
-      className="flex flex-col gap-3 rounded-card bg-card p-4 shadow-card sm:flex-row sm:items-center sm:gap-4 sm:p-5"
+      className="flex flex-col gap-3 rounded-card border border-tangerine/35 bg-linear-to-br from-lemon/20 to-tangerine/15 p-4 sm:flex-row sm:items-center sm:gap-4"
     >
-      <Bell className="h-6 w-6 shrink-0 text-accent" aria-hidden="true" />
+      <span className="grid h-11 w-11 shrink-0 animate-bell-ring place-items-center rounded-field bg-card text-tangerine shadow-card">
+        <Bell className="h-5 w-5" aria-hidden="true" />
+      </span>
 
       <div className="flex-1">
-        <p className="text-base font-medium text-fg">
-          Quer ser lembrado das suas tarefas?
+        <p className="font-display text-base font-semibold text-fg">
+          Avisamos você na hora certa
         </p>
         <p className="text-sm text-muted">
-          Ative as notificações e avisamos na hora marcada, mesmo com o site
-          fechado.
+          Ative as notificações e o lembrete chega mesmo com o site fechado.
         </p>
         {errorMessage && (
-          <p role="alert" className="mt-1 text-sm text-accent">
+          <p role="alert" className="mt-1 text-sm font-bold text-accent">
             {errorMessage}
           </p>
         )}
@@ -37,10 +38,10 @@ export function NotificationPrompt({
         type="button"
         onClick={onEnable}
         disabled={isEnabling}
-        className="flex shrink-0 items-center justify-center gap-2 rounded-field bg-btn px-5 py-2.5 text-base font-bold text-btn-fg shadow-card transition hover:bg-btn-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-fg/25 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex shrink-0 items-center justify-center gap-2 rounded-full bg-btn px-5 py-2.5 text-sm font-bold text-btn-fg transition hover:-translate-y-0.5 hover:bg-btn-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isEnabling && (
-          <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         )}
         <span>Ativar</span>
       </button>

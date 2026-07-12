@@ -4,25 +4,36 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Design tokens extracted from Figma "Simple To-Do List (Community)".
- * Static tokens (font, radius, shadow) live in `@theme`.
- * Theme-aware colors are declared as `--c-*` custom properties on `:root`
- * and `.dark`, then mapped with `@theme inline` so the `bg-*`/`text-*`
- * utilities resolve to `var(--c-*)` and swap automatically per theme.
+ * Design tokens — direção "Confete".
+ *
+ * O acento rosa (#fb2c5a) vem do Figma original; o resto da paleta foi construído
+ * em volta dele: tangerina para lembretes, menta para concluído, limão para
+ * destaques. Os fundos têm viés quente de propósito — cinza neutro é o que todo
+ * app entrega por padrão.
+ *
+ * Estáticos (fonte, raio, sombra) ficam em `@theme`. As cores são declaradas como
+ * `--c-*` em `:root` e `.dark` e mapeadas com `@theme inline`, para que os
+ * utilitários `bg-*`/`text-*` troquem de tema sozinhos.
  */
 @theme {
-  --font-sans: "Lato", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
-  --radius-card: 12px;
-  --radius-field: 12px;
-  --shadow-card: 0 2px 4px 0 rgb(0 0 0 / 0.25);
-  --shadow-sidebar: 0 4px 12px 0 rgb(0 0 0 / 0.25);
+  --font-sans: "Nunito Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  --font-display: "Fredoka", "Nunito Sans", system-ui, sans-serif;
+
+  --radius-card: 24px;
+  --radius-field: 16px;
+
+  --shadow-card: 0 2px 4px rgb(42 26 36 / 0.06), 0 12px 28px -12px rgb(42 26 36 / 0.18);
+  --shadow-lift: 0 6px 10px rgb(42 26 36 / 0.08), 0 20px 40px -16px rgb(251 44 90 / 0.28);
+  --shadow-sidebar: 0 4px 24px 0 rgb(42 26 36 / 0.18);
+  --shadow-pop: 0 8px 18px -8px rgb(251 44 90 / 0.8);
 }
 
 @theme inline {
   --color-page: var(--c-page);
   --color-sidebar: var(--c-sidebar);
   --color-card: var(--c-card);
+  --color-sunken: var(--c-sunken);
   --color-field: var(--c-field);
   --color-field-border: var(--c-field-border);
   --color-fg: var(--c-fg);
@@ -36,52 +47,84 @@
   --color-nav: var(--c-nav);
   --color-nav-fg: var(--c-nav-fg);
   --color-accent: var(--c-accent);
+  --color-mint: var(--c-mint);
+  --color-tangerine: var(--c-tangerine);
+  --color-lemon: var(--c-lemon);
 }
 
-/* Light theme (Figma light frames: page #F3F4F6) */
+/*
+ * Tema claro: branco levemente lilás, não creme. O creme brigava com o rosa e
+ * deixava o laranja barrento. Este cinza puxa para a mesma família do ameixa do
+ * tema escuro — os dois viraram parentes, e o acento fica limpo nos dois.
+ */
 :root {
-  --c-page: #f3f4f6;
+  --c-page: #f6f5f9;
   --c-sidebar: #ffffff;
   --c-card: #ffffff;
+  --c-sunken: #f1eff7;
   --c-field: #ffffff;
-  --c-field-border: #e5e7eb;
-  --c-fg: #333333;
-  --c-muted: #6a7282;
-  --c-subtle: #99a1af;
-  --c-placeholder: #a9a9a9;
-  --c-divider: #d1d5dc;
-  --c-btn: #000000;
-  --c-btn-hover: #1e2939;
+  --c-field-border: #e7e3ef;
+  --c-fg: #241e2b;
+  --c-muted: #6e6880;
+  --c-subtle: #9691a4;
+  --c-placeholder: #a29dae;
+  --c-divider: #e7e3ef;
+  --c-btn: #241e2b;
+  --c-btn-hover: #3a3147;
   --c-btn-fg: #ffffff;
-  --c-nav: #f3f4f6;
-  --c-nav-fg: #333333;
+  --c-nav: #f0eafa;
+  --c-nav-fg: #241e2b;
   --c-accent: #fb2c5a;
+  --c-mint: #12c7a0;
+  --c-tangerine: #ff8a3d;
+  --c-lemon: #ffd24a;
+
+  /* Manchas do fundo: no claro elas quase não aparecem de propósito — foi o
+     excesso delas que deixou o fundo pesado. */
+  --c-glow-a: rgb(251 44 90 / 0.05);
+  --c-glow-b: rgb(124 92 255 / 0.05);
 }
 
-/* Dark theme (Figma dark frames: page #101828) */
 .dark {
-  --c-page: #101828;
-  --c-sidebar: #1e2939;
-  --c-card: #1e2939;
-  --c-field: #364153;
-  --c-field-border: #4a5565;
-  --c-fg: #ffffff;
-  --c-muted: #6a7282;
-  --c-subtle: #99a1af;
-  --c-placeholder: #a9a9a9;
-  --c-divider: #4a5565;
-  --c-btn: #4a5565;
-  --c-btn-hover: #5a6577;
-  --c-btn-fg: #ffffff;
-  --c-nav: #f3f4f6;
-  --c-nav-fg: #333333;
+  --c-page: #17111c;
+  --c-sidebar: #221a29;
+  --c-card: #221a29;
+  --c-sunken: #2b2233;
+  --c-field: #2b2233;
+  --c-field-border: #372c40;
+  --c-fg: #f7eff4;
+  --c-muted: #a695a8;
+  --c-subtle: #8d7d92;
+  --c-placeholder: #8d7d92;
+  --c-divider: #372c40;
+  --c-btn: #f7eff4;
+  --c-btn-hover: #ffffff;
+  --c-btn-fg: #17111c;
+  --c-nav: #2f2439;
+  --c-nav-fg: #f7eff4;
   --c-accent: #fb2c5a;
+  --c-mint: #12c7a0;
+  --c-tangerine: #ff8a3d;
+  --c-lemon: #ffd24a;
+
+  --c-glow-a: rgb(255 138 61 / 0.13);
+  --c-glow-b: rgb(18 199 160 / 0.11);
 }
 
 html,
 body,
 #root {
   min-height: 100vh;
+}
+
+/* O dropdown do <select> é desenhado pelo navegador, não por nós. `color-scheme`
+   é o único jeito de fazer ele nascer escuro no tema escuro. */
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
 }
 
 body {
@@ -91,4 +134,114 @@ body {
   color: var(--c-fg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Manchas de cor no fundo: tiram o chapado sem custar contraste ao texto. A
+   intensidade vem do tema — ver `--c-glow-*`. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(60rem 40rem at 88% -10%, var(--c-glow-a), transparent 60%),
+    radial-gradient(50rem 36rem at 8% 108%, var(--c-glow-b), transparent 60%);
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+/* O risco da tarefa concluída cresce como um traço de marca-texto, em vez de
+   aparecer pronto. Fica no CSS porque depende de pseudo-elemento. */
+.strike-grow {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.strike-grow::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  top: 52%;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--c-mint);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.strike-grow[data-done="true"]::after {
+  transform: scaleX(1);
+}
+
+@keyframes check-pop {
+  0% { transform: scale(1); }
+  38% { transform: scale(1.35) rotate(-9deg); }
+  100% { transform: scale(1); }
+}
+
+.animate-check-pop {
+  animation: check-pop 0.42s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+/* Troca de filtro: a lista entra de baixo, escalonada. O escalonamento é o que
+   faz a troca parecer uma transição e não um corte seco. Os delays param no 8º
+   item — além disso a espera passaria a ser percebida como lentidão. */
+@keyframes list-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.list-enter {
+  animation: list-enter 0.28s ease-out;
+}
+
+.list-enter li {
+  animation: list-enter 0.3s ease-out backwards;
+}
+
+.list-enter li:nth-child(2) { animation-delay: 40ms; }
+.list-enter li:nth-child(3) { animation-delay: 80ms; }
+.list-enter li:nth-child(4) { animation-delay: 120ms; }
+.list-enter li:nth-child(5) { animation-delay: 160ms; }
+.list-enter li:nth-child(6) { animation-delay: 200ms; }
+.list-enter li:nth-child(7) { animation-delay: 240ms; }
+.list-enter li:nth-child(n + 8) { animation-delay: 280ms; }
+
+@keyframes bell-ring {
+  0%, 82%, 100% { transform: rotate(0); }
+  86% { transform: rotate(13deg); }
+  90% { transform: rotate(-11deg); }
+  94% { transform: rotate(7deg); }
+}
+
+.animate-bell-ring {
+  animation: bell-ring 3.6s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+@keyframes balloon-float {
+  50% { transform: translateY(-9px); }
+}
+
+.animate-balloon-float {
+  animation: balloon-float 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
